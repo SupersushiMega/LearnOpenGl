@@ -3,27 +3,11 @@
 #include<GLFW/glfw3.h>
 #include"ShaderLoader.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image/stb_image.h>
+
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);	//function used to change the viewport size in case of a resize from the user
-void checkButtonClose(GLFWwindow* window);	//function for checking if the window should close when escape is pushed
-//
-//const char* vertexShaderSource = "#version 330 core \n"		//vertex shader code
-//"layout (location = 0) in vec3 aPos; \n"					//
-//"layout (location = 1) in vec3 aColor;\n"					//
-//"out vec3 vertexColor;\n"									//
-//"void main() \n"											//
-//"{ \n"														//
-//"	gl_Position = vec4(aPos, 1.0); \n"						//
-//"	vertexColor = aColor;\n"								//
-//"} \0";														//
-//
-//
-//const char* fragmentShaderSource = "#version 330 core \n"	//fragment shader code
-//"out vec4 FragColor; \n"									//
-//"in vec3 vertexColor;\n"									//
-//"void main() \n"											//
-//"{ \n"														//
-//"	FragColor = vec4(vertexColor, 1.0); \n"					//
-//"} \0";														//
+void checkButtonClose(GLFWwindow* window);	//function for checking if the window should close when escape is pushed											//
 
 int main()
 {
@@ -67,15 +51,20 @@ int main()
 
 	//define vertices
 	float vertices[] = {
-	 	 0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-		-0.5f,  0.5f, 0.0f, 0.0f, 0.0f, 0.0f
+	 	-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+		 0.0f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+		 0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+	};
+
+	float texCoords[] = {
+		0.0f, 0.0f,
+		1.0f, 0.0f,
+		0.5f, 1.0f
 	};
 
 	unsigned int indices[] = {
-		0, 1, 3,	//tri1 
-		1, 2, 3		//tri2
+		0, 1, 2,	//tri1 
+		//1, 2, 3		//tri2
 	};
 
 	//create vertex buffer object
@@ -89,63 +78,6 @@ int main()
 	glGenBuffers(1, &elementBuff);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuff);	//bind elementBuff to the GL_ELEMENT_ARRAY_BUFFER target
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);	//copy data from triVert into GL_ELEMENT_ARRAY_BUFFER which is bound to vertexBuff
-	
-
-
-	int success;	//variable to store if a check was succesfull
-	char infoLog[512];	//variable for log Output
-
-	////create vertex shader
-	////==================================================================
-	//unsigned int vertexShader;
-	//vertexShader = glCreateShader(GL_VERTEX_SHADER);	//create vertex shader
-	//glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);	//attach vertex shader sourcecode
-	//glCompileShader(vertexShader);	//compile vertex shader
-	//
-	//glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);	//get status of compilation
-	//if (!success)	//check if the compilation was not successful
-	//{
-	//	glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);	//get log info and store into infoLog
-	//	std::cout << "ERROR: vertexshader failed compilation: info: " << infoLog << std::endl;	//output error message
-	//}
-	////==================================================================
-	//
-	////create fragment shader
-	////==================================================================
-	//unsigned int fragmentShader;
-	//fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);	//create fragment shader
-	//glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);	//attach fragment shader sourcecode
-	//glCompileShader(fragmentShader);	//compile vertex shader
-	//
-	//glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);	//get status of compilation
-	//if (!success)	//check if the compilation was not successful
-	//{
-	//	glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);	//get log info and store into infoLog
-	//	std::cout << "ERROR: fragmentshader failed compilation: info: " << infoLog << std::endl;	//output error message
-	//}
-	////==================================================================
-	//
-	////create shader programm
-	////==================================================================
-	//unsigned int shaderProgram;
-	//shaderProgram = glCreateProgram();	//create shader programm object
-	//glAttachShader(shaderProgram, vertexShader);	//attach vertex shader to shader program
-	//glAttachShader(shaderProgram, fragmentShader);	//attach fragment shader to shader program
-	//glLinkProgram(shaderProgram);	//link shaders to shader program
-	//
-	//glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);	//get link status of programm
-	//if (!success)	//check if the linking was not successful
-	//{
-	//	glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);	//get log info and store into infoLog
-	//	std::cout << "ERROR: shaderprogram failed linking: info: " << infoLog << std::endl;	//output error message
-	//}
-	//
-	//glUseProgram(shaderProgram);	//activate shader programm
-	//
-	////delete shaders
-	//glDeleteShader(vertexShader);
-	//glDeleteShader(fragmentShader);
-	////==================================================================
 
 	//create vertex array object
 	//==================================================================
@@ -168,12 +100,27 @@ int main()
 
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));	//define how to interpret vertex data for color in vertex attribute with position 1
 	glEnableVertexAttribArray(1);	//enable vertex attribute with position 1
+	//==================================================================
 
 	float timeValue = glfwGetTime();
-	float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
+	float offsetValue = (sin(timeValue) / 2.0f) + 0.5f;
 
-	shader baseShader("D:/Coding/SushRay2D/Resources/Shaders/baseVertShader.vert", "D:/Coding/SushRay2D/Resources/Shaders/baseFragShader.frag");	//load shader
+	shader baseShader("Resources/Shaders/baseVertShader.vert", "Resources/Shaders/baseFragShader.frag");	//load shader
 
+	//define texture Parameters
+	//==================================================================
+
+	//texture wrapping
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);	//set texture wrapping on the s axis to mirrored repeat
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);	//set texture wrapping on the t axis to clamp to border
+
+	float borderColor[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);	//set border color
+
+
+	//texture filtering
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);	//set linear filtering mode mode for downscaling on texture and mipmap
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);	//set linear filtering mode for upscaling on texture
 
 	while (!glfwWindowShouldClose(window))	//renderloop which exits when the window is told to close
 	{
@@ -182,16 +129,17 @@ int main()
 		//rendering
 		//==================================================================
 
-		glClearColor(1.0f, 0.0f, 0.0f, 1.0f);	//set clear color
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);	//set clear color
 		glClear(GL_COLOR_BUFFER_BIT);	//clear the color buffer with previosly set color
 
 		//draw
 		timeValue = glfwGetTime();
-		greenValue = (sin(timeValue) / 2.0f) + 0.5f;
+		offsetValue = (sin(timeValue) / 2.0f) + 0.5f;
 
 		baseShader.use();
+		baseShader.setFloat("offset", offsetValue);
 		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);	//swap back buffer (buffer thats being drawn on) and front buffer(buffer with image to be displayed)
 		//==================================================================
