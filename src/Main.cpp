@@ -51,20 +51,15 @@ int main()
 
 	//define vertices
 	float vertices[] = {
-	 	-0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-		 0.0f,  0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-		 0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-	};
-
-	float texCoords[] = {
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		0.5f, 1.0f
+		 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
+		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 
+		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 
+		-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f 
 	};
 
 	unsigned int indices[] = {
-		0, 1, 2,	//tri1 
-		//1, 2, 3		//tri2
+		0, 1, 3,	//tri1 
+		1, 2, 3		//tri2
 	};
 
 	//create vertex buffer object
@@ -95,11 +90,14 @@ int main()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);	//copy data from triVert into GL_ELEMENT_ARRAY_BUFFER which is bound to vertexBuff
 
 	//set vertex attribute pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);	//define how to interpret vertex data for location in vertex attribute with position 0
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);	//define how to interpret vertex data for location in vertex attribute with position 0
 	glEnableVertexAttribArray(0);	//enable vertex attribute with position 0
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));	//define how to interpret vertex data for color in vertex attribute with position 1
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));	//define how to interpret vertex data for color in vertex attribute with position 1
 	glEnableVertexAttribArray(1);	//enable vertex attribute with position 1
+
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));	//define how to interpret vertex data for color in vertex attribute with position 2
+	glEnableVertexAttribArray(2);	//enable vertex attribute with position 1
 	//==================================================================
 
 	float timeValue = glfwGetTime();
@@ -107,7 +105,7 @@ int main()
 
 	shader baseShader("Resources/Shaders/baseVertShader.vert", "Resources/Shaders/baseFragShader.frag");	//load shader
 
-	//define texture Parameters
+	//define texture Parameters and load textures
 	//==================================================================
 
 	//texture wrapping
@@ -117,10 +115,59 @@ int main()
 	float borderColor[] = { 0.5f, 0.5f, 0.5f, 1.0f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);	//set border color
 
-
 	//texture filtering
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);	//set linear filtering mode mode for downscaling on texture and mipmap
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);	//set linear filtering mode for upscaling on texture
+
+	//load textures
+	int width;
+	int height;
+	int nrChannels;	//number of color channels
+	
+	unsigned int texture1;
+	glGenTextures(1, &texture1);	//generate texture object
+	glBindTexture(GL_TEXTURE_2D, texture1);	//bind texture to GL_TEXTURE_2D
+
+	stbi_set_flip_vertically_on_load(true);	//set image loader to load image flipped on y axis
+
+	unsigned char* data = stbi_load("Resources/Textures/container.jpg", &width, &height, &nrChannels, 0);	//load image
+	
+	if (data)	//check if there is data is not NULL
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);	//generate texture
+		glGenerateMipmap(GL_TEXTURE_2D);	//generate Mipmap
+	}
+	else
+	{
+		std::cout << "ERROR: texture loading failed" << std::endl;
+	}
+
+	stbi_image_free(data);	//free image memory
+	
+
+	unsigned int texture2;
+	glGenTextures(1, &texture2);	//generate texture object
+	glBindTexture(GL_TEXTURE_2D, texture2);	//bind texture to GL_TEXTURE_2D
+	
+	data = stbi_load("Resources/Textures/awesomeface.png", &width, &height, &nrChannels, 0);	//load image
+
+	if (data)	//check if there is data is not NULL
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);	//generate texture
+		glGenerateMipmap(GL_TEXTURE_2D);	//generate Mipmap
+	}
+	else
+	{
+		std::cout << "ERROR: texture loading failed" << std::endl;
+	}
+
+	stbi_image_free(data);	//free image memory
+
+	baseShader.use();
+	baseShader.setInt("texSampler1", 0);	//set texture 1 to GL_TEXTURE0
+	baseShader.setInt("texSampler2", 1);	//set texture 2 to GL_TEXTURE1
+
+	float ratio = 0.0f;
 
 	while (!glfwWindowShouldClose(window))	//renderloop which exits when the window is told to close
 	{
@@ -137,9 +184,14 @@ int main()
 		offsetValue = (sin(timeValue) / 2.0f) + 0.5f;
 
 		baseShader.use();
-		baseShader.setFloat("offset", offsetValue);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture1);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture2);
+
 		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);	//swap back buffer (buffer thats being drawn on) and front buffer(buffer with image to be displayed)
 		//==================================================================
