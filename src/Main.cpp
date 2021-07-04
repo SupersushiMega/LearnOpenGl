@@ -177,11 +177,8 @@ int main()
 	//==================================================================
 	glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);	//define glm vector
 	glm::mat4 transMat = glm::mat4(1.0f);	//create identity matrix
-	transMat = glm::rotate(transMat, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));	//add rotation to transform matrix
-	transMat = glm::scale(transMat, glm::vec3(0.5f, 0.5f, 0.5f));	//add scale to transform matrix
 
 	unsigned int transformLoc = glGetUniformLocation(baseShader.ID, "transMat");	//get location of transMat uniform
-	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transMat));	//send matrix to uniform
 	//==================================================================
 
 
@@ -196,8 +193,11 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);	//clear the color buffer with previosly set color
 
 		//draw
-		timeValue = glfwGetTime();
-		offsetValue = (sin(timeValue) / 2.0f) + 0.5f;
+		transMat = glm::mat4(1.0f);	//create identity matrix
+		transMat = glm::translate(transMat, glm::vec3(0.5f, -0.5f, 0.0f));	//add scale to transform matrix
+		transMat = glm::rotate(transMat, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));	//add rotation to transform matrix
+
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transMat));	//send matrix to uniform
 
 		baseShader.use();
 
