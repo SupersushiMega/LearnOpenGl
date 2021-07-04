@@ -5,22 +5,33 @@
 #include<glm/gtc/matrix_transform.hpp>
 #include<glm/gtc/type_ptr.hpp>
 #include"ShaderLoader.h"
+#include"Camera.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);	//function used to change the viewport size in case of a resize from the user
-void proccessInput(GLFWwindow* window);	//function for checking if the window should close when escape is pushed											//
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);	//function to get mouse movement events
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);	//function for scrolling events
+
+void proccessInput(GLFWwindow* window);	//function for checking if the window should close when escape is pushed
 
 //define camera
 //==================================================================
-glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 3.0f);	//define position of camera
-glm::vec3 camFront = glm::vec3(0.0f, 0.0f, -1.0f);	//define front of camera
-glm::vec3 camUp = glm::vec3(0.0f, 1.0f, 0.0f);	//define up of camera
+camera cam = camera();
 //==================================================================
 
+//variables used for delta time
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+
+//variables used for mouse movement
+float lastX = 500.0f;
+float lastY = 400.0f;
+float yaw = 0.0f;
+float pitch = 0.0f;
+float fov = 45.0f;
+bool firstMouse = true;
 
 int main()
 {
@@ -61,6 +72,8 @@ int main()
 	glViewport(0, 0, 1000, 800);	//define viewport
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);	//set the framebuffer_size_callback function to be called whenever the window gets resized
+	glfwSetCursorPosCallback(window, mouse_callback);	//set mouse_callback to be called whenever the mouse moves
+	glfwSetScrollCallback(window, scroll_callback);	//set scroll_callback to be called whenever the user scrolles
 
 	//define vertices
 	float vertices[] = {
@@ -249,9 +262,10 @@ int main()
 
 	glEnable(GL_DEPTH_TEST);	//enable depth testing
 
-	const float r = 10.0f;
-	float camX;
-	float camZ;
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);	//capture mouse cursor
+
+
+	cam.setMoveMode(FPS_MODE);
 
 	while (!glfwWindowShouldClose(window))	//renderloop which exits when the window is told to close
 	{
@@ -272,10 +286,8 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
-		camX = sin(glfwGetTime()) * r;
-		camZ = cos(glfwGetTime()) * r;
-
-		viewMat = glm::lookAt(camPos, camPos + camFront, camUp);
+		viewMat = cam.getViewMat();
+		projMat = glm::perspective(glm::radians(cam.fov), 1000.0f / 800.0f, 0.1f, 100.0f);
 
 		glUniformMatrix4fv(viewMatLoc, 1, GL_FALSE, glm::value_ptr(viewMat));	//send matrix to uniform
 		glUniformMatrix4fv(projMatLoc, 1, GL_FALSE, glm::value_ptr(projMat));	//send matrix to uniform
@@ -307,6 +319,41 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);	//set viewport to new dimensions
 }
 
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	float xoffset = 0;
+	float yoffset = 0;
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+	else
+	{
+		xoffset = xpos - lastX;
+		yoffset = lastY - ypos;
+		lastX = xpos;
+		lastY = ypos;
+	}
+
+	cam.mouseYawPitch(xoffset, yoffset);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	fov -= (float)yoffset;
+	if (fov < 1.0f)
+	{
+		fov = 1.0f;
+	}
+	else if (fov > 90.0f)
+	{
+		fov = 90.0f;
+	}
+	cam.setFOV(fov);
+}
+
 void proccessInput(GLFWwindow* window)
 {
 	float curFrame = glfwGetTime();
@@ -321,22 +368,22 @@ void proccessInput(GLFWwindow* window)
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)	//check if escape is being pressed
 	{
-		camPos += camSpeed * camFront;
+		cam.camMove(1.0f, 0.0f, 0.0f);
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)	//check if escape is being pressed
 	{
-		camPos -= camSpeed * camFront;
+		cam.camMove(-1.0f, 0.0f, 0.0f);
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)	//check if escape is being pressed
 	{
-		camPos += glm::normalize(glm::cross(camFront, camUp)) * camSpeed;
+		cam.camMove(0.0f, 1.0f, 0.0f);
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)	//check if escape is being pressed
 	{
-		camPos -= glm::normalize(glm::cross(camFront, camUp)) * camSpeed;
+		cam.camMove(0.0f, -1.0f, 0.0f);
 	}
 
 }
