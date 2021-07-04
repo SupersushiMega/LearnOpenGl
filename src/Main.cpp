@@ -54,10 +54,47 @@ int main()
 
 	//define vertices
 	float vertices[] = {
-		 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
-		 0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 
-		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 
-		-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f 
+		 -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		- 0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+
+		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		-0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
+		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f,
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f
 	};
 
 	unsigned int indices[] = {
@@ -93,14 +130,11 @@ int main()
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);	//copy data from triVert into GL_ELEMENT_ARRAY_BUFFER which is bound to vertexBuff
 
 	//set vertex attribute pointers
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);	//define how to interpret vertex data for location in vertex attribute with position 0
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);	//define how to interpret vertex data for location in vertex attribute with position 0
 	glEnableVertexAttribArray(0);	//enable vertex attribute with position 0
 
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));	//define how to interpret vertex data for color in vertex attribute with position 1
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));	//define how to interpret vertex data for color in vertex attribute with position 1
 	glEnableVertexAttribArray(1);	//enable vertex attribute with position 1
-
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));	//define how to interpret vertex data for color in vertex attribute with position 2
-	glEnableVertexAttribArray(2);	//enable vertex attribute with position 1
 	//==================================================================
 
 	float timeValue = glfwGetTime();
@@ -175,10 +209,21 @@ int main()
 
 	//define Matrixes
 	//==================================================================
-	glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);	//define glm vector
-	glm::mat4 transMat = glm::mat4(1.0f);	//create identity matrix
+	//glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);	//define glm vector
+	//glm::mat4 transMat = glm::mat4(1.0f);	//create identity matrix
 
-	unsigned int transformLoc = glGetUniformLocation(baseShader.ID, "transMat");	//get location of transMat uniform
+	glm::mat4 modelMat = glm::mat4(1.0f);
+	modelMat = glm::rotate(modelMat, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));	//create model matrix
+
+	glm::mat4 viewMat = glm::mat4(1.0f);
+	viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -3.0f));	//create view matrix
+
+	glm::mat4 projMat;
+	projMat = glm::perspective(glm::radians(45.0f), 1000.0f / 800.0f, 0.1f, 100.0f);	//create projection matrix with perspective
+
+	unsigned int modelMatLoc = glGetUniformLocation(baseShader.ID, "modelMat");	//get location of modelMat uniform
+	unsigned int viewMatLoc = glGetUniformLocation(baseShader.ID, "viewMat");	//get location of viewMat uniform
+	unsigned int projMatLoc = glGetUniformLocation(baseShader.ID, "projMat");	//get location of projMat uniform
 	//==================================================================
 
 
@@ -193,11 +238,6 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT);	//clear the color buffer with previosly set color
 
 		//draw
-		transMat = glm::mat4(1.0f);	//create identity matrix
-		transMat = glm::translate(transMat, glm::vec3(0.5f, -0.5f, 0.0f));	//add scale to transform matrix
-		transMat = glm::rotate(transMat, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));	//add rotation to transform matrix
-
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transMat));	//send matrix to uniform
 
 		baseShader.use();
 
@@ -206,8 +246,16 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
+		glm::mat4 modelMat = glm::mat4(1.0f);
+		modelMat = glm::rotate(modelMat, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));	//update model matrix
+
+		glUniformMatrix4fv(modelMatLoc, 1, GL_FALSE, glm::value_ptr(modelMat));	//send matrix to uniform
+		glUniformMatrix4fv(viewMatLoc, 1, GL_FALSE, glm::value_ptr(viewMat));	//send matrix to uniform
+		glUniformMatrix4fv(projMatLoc, 1, GL_FALSE, glm::value_ptr(projMat));	//send matrix to uniform
+
 		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);	//swap back buffer (buffer thats being drawn on) and front buffer(buffer with image to be displayed)
 		//==================================================================
