@@ -220,16 +220,24 @@ int main()
 	float ratio = 0.0f;
 	//==================================================================
 
+	//define camera
+	//==================================================================
+	glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 3.0f);	//define camera position
+	glm::vec3 camTarget = glm::vec3(0.0f, 0.0f, 0.0f);	//define camera target
+	glm::vec3 camDir = glm::normalize(camPos - camTarget);	//define camera direction
+
+	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);	//define up in world space
+	glm::vec3 camRight = glm::normalize(glm::cross(up, camDir));	//define right vector of camera
+	glm::vec3 camUp = glm::cross(camDir, camRight);	//define up of camera
+	//==================================================================
+
 	//define Matrixes
 	//==================================================================
-	//glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);	//define glm vector
-	//glm::mat4 transMat = glm::mat4(1.0f);	//create identity matrix
-
 	glm::mat4 modelMat = glm::mat4(1.0f);
 	modelMat = glm::rotate(modelMat, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));	//create model matrix
 
-	glm::mat4 viewMat = glm::mat4(1.0f);
-	viewMat = glm::translate(viewMat, glm::vec3(0.0f, 0.0f, -3.0f));	//create view matrix
+	glm::mat4 viewMat;
+	viewMat = glm::lookAt(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));	//create view matrix
 
 	glm::mat4 projMat;
 	projMat = glm::perspective(glm::radians(45.0f), 1000.0f / 800.0f, 0.1f, 100.0f);	//create projection matrix with perspective
@@ -240,6 +248,10 @@ int main()
 	//==================================================================
 
 	glEnable(GL_DEPTH_TEST);	//enable depth testing
+
+	const float r = 10.0f;
+	float camX;
+	float camZ;
 
 	while (!glfwWindowShouldClose(window))	//renderloop which exits when the window is told to close
 	{
@@ -260,8 +272,14 @@ int main()
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 
+		camX = sin(glfwGetTime()) * r;
+		camZ = cos(glfwGetTime()) * r;
+
+		viewMat = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
 		glUniformMatrix4fv(viewMatLoc, 1, GL_FALSE, glm::value_ptr(viewMat));	//send matrix to uniform
 		glUniformMatrix4fv(projMatLoc, 1, GL_FALSE, glm::value_ptr(projMat));	//send matrix to uniform
+
 
 		glBindVertexArray(VAO);
 		for (unsigned int i = 0; i < 10; i++)
@@ -269,7 +287,7 @@ int main()
 			modelMat = glm::mat4(1.0f);
 			modelMat = glm::translate(modelMat, cubePos[i]);
 			modelMat = glm::rotate(modelMat, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
-			baseShader.setMat4("modelMat", modelMat);
+			baseShader.setMat4("modelMat", modelMat);	//send matrix to uniform
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
