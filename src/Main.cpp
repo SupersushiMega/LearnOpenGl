@@ -1,6 +1,9 @@
 #include<iostream>
 #include<glad/glad.h>
 #include<GLFW/glfw3.h>
+#include<glm/glm.hpp>
+#include<glm/gtc/matrix_transform.hpp>
+#include<glm/gtc/type_ptr.hpp>
 #include"ShaderLoader.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -168,6 +171,19 @@ int main()
 	baseShader.setInt("texSampler2", 1);	//set texture 2 to GL_TEXTURE1
 
 	float ratio = 0.0f;
+	//==================================================================
+
+	//define Matrixes
+	//==================================================================
+	glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);	//define glm vector
+	glm::mat4 transMat = glm::mat4(1.0f);	//create identity matrix
+	transMat = glm::rotate(transMat, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));	//add rotation to transform matrix
+	transMat = glm::scale(transMat, glm::vec3(0.5f, 0.5f, 0.5f));	//add scale to transform matrix
+
+	unsigned int transformLoc = glGetUniformLocation(baseShader.ID, "transMat");	//get location of transMat uniform
+	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transMat));	//send matrix to uniform
+	//==================================================================
+
 
 	while (!glfwWindowShouldClose(window))	//renderloop which exits when the window is told to close
 	{
