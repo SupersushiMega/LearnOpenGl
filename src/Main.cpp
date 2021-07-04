@@ -10,7 +10,17 @@
 #include <stb_image/stb_image.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);	//function used to change the viewport size in case of a resize from the user
-void checkButtonClose(GLFWwindow* window);	//function for checking if the window should close when escape is pushed											//
+void proccessInput(GLFWwindow* window);	//function for checking if the window should close when escape is pushed											//
+
+//define camera
+//==================================================================
+glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 3.0f);	//define position of camera
+glm::vec3 camFront = glm::vec3(0.0f, 0.0f, -1.0f);	//define front of camera
+glm::vec3 camUp = glm::vec3(0.0f, 1.0f, 0.0f);	//define up of camera
+//==================================================================
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
 
 int main()
 {
@@ -220,16 +230,6 @@ int main()
 	float ratio = 0.0f;
 	//==================================================================
 
-	//define camera
-	//==================================================================
-	glm::vec3 camPos = glm::vec3(0.0f, 0.0f, 3.0f);	//define camera position
-	glm::vec3 camTarget = glm::vec3(0.0f, 0.0f, 0.0f);	//define camera target
-	glm::vec3 camDir = glm::normalize(camPos - camTarget);	//define camera direction
-
-	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);	//define up in world space
-	glm::vec3 camRight = glm::normalize(glm::cross(up, camDir));	//define right vector of camera
-	glm::vec3 camUp = glm::cross(camDir, camRight);	//define up of camera
-	//==================================================================
 
 	//define Matrixes
 	//==================================================================
@@ -255,7 +255,7 @@ int main()
 
 	while (!glfwWindowShouldClose(window))	//renderloop which exits when the window is told to close
 	{
-		checkButtonClose(window);
+		proccessInput(window);
 
 		//rendering
 		//==================================================================
@@ -275,7 +275,7 @@ int main()
 		camX = sin(glfwGetTime()) * r;
 		camZ = cos(glfwGetTime()) * r;
 
-		viewMat = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		viewMat = glm::lookAt(camPos, camPos + camFront, camUp);
 
 		glUniformMatrix4fv(viewMatLoc, 1, GL_FALSE, glm::value_ptr(viewMat));	//send matrix to uniform
 		glUniformMatrix4fv(projMatLoc, 1, GL_FALSE, glm::value_ptr(projMat));	//send matrix to uniform
@@ -307,10 +307,36 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);	//set viewport to new dimensions
 }
 
-void checkButtonClose(GLFWwindow* window)
+void proccessInput(GLFWwindow* window)
 {
+	float curFrame = glfwGetTime();
+	deltaTime = curFrame - lastFrame;	//caclulate delta time
+	lastFrame = curFrame;
+	const float camSpeed = 2.5f * deltaTime;
+
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)	//check if escape is being pressed
 	{
 		glfwSetWindowShouldClose(window, true);
 	}
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)	//check if escape is being pressed
+	{
+		camPos += camSpeed * camFront;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)	//check if escape is being pressed
+	{
+		camPos -= camSpeed * camFront;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)	//check if escape is being pressed
+	{
+		camPos += glm::normalize(glm::cross(camFront, camUp)) * camSpeed;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)	//check if escape is being pressed
+	{
+		camPos -= glm::normalize(glm::cross(camFront, camUp)) * camSpeed;
+	}
+
 }
