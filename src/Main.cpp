@@ -226,6 +226,7 @@ int main()
 	unsigned int projMatLoc = glGetUniformLocation(baseShader.ID, "projMat");	//get location of projMat uniform
 	//==================================================================
 
+	glEnable(GL_DEPTH_TEST);	//enable depth testing
 
 	while (!glfwWindowShouldClose(window))	//renderloop which exits when the window is told to close
 	{
@@ -235,7 +236,7 @@ int main()
 		//==================================================================
 
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);	//set clear color
-		glClear(GL_COLOR_BUFFER_BIT);	//clear the color buffer with previosly set color
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	//clear the color buffer with previosly set color
 
 		//draw
 
