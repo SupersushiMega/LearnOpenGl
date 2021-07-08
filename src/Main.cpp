@@ -138,6 +138,8 @@ int main()
 		1, 2, 3		//tri2
 	};
 
+	glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
 	//create vertex buffer object
 	unsigned int vertexBuff;
 	glGenBuffers(1, &vertexBuff);
@@ -173,10 +175,34 @@ int main()
 	glEnableVertexAttribArray(1);	//enable vertex attribute with position 1
 	//==================================================================
 
-	float timeValue = glfwGetTime();
-	float offsetValue = (sin(timeValue) / 2.0f) + 0.5f;
+	////create vertex array object for light source
+	////==================================================================
+	//unsigned int lightVAO;
+	//glGenVertexArrays(1, &lightVAO);	//generate vertex array object of size 1
+	//glBindVertexArray(lightVAO);	//bind vertex array
+	//
+	////copy vertices from vertex buffer
+	//glBindBuffer(GL_ARRAY_BUFFER, vertexBuff);	//bind vertex buff
+	//
+	////copy data from elemental buffer
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuff);	//bind elementBuff to the GL_ELEMENT_ARRAY_BUFFER target
+	//
+	////set vertex attribute pointers
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);	//define how to interpret vertex data for location in vertex attribute with position 0
+	//glEnableVertexAttribArray(0);	//enable vertex attribute with position 0
+	//
+	//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));	//define how to interpret vertex data for color in vertex attribute with position 1
+	//glEnableVertexAttribArray(1);	//enable vertex attribute with position 1
+	////==================================================================
 
 	shader baseShader("Resources/Shaders/baseVertShader.vert", "Resources/Shaders/baseFragShader.frag");	//load shader
+	shader textureShader("Resources/Shaders/textureVertShader.vert", "Resources/Shaders/textureFragShader.frag");	//load shader
+	shader lightingBaseShader("Resources/Shaders/baseLightingVertShader.vert", "Resources/Shaders/baseLightingFragShader.frag");	//load shader
+	shader lightSourceShader("Resources/Shaders/baseVertShader.vert", "Resources/Shaders/lightSourceFragShader.frag");
+
+	lightingBaseShader.use();
+	lightingBaseShader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+	lightingBaseShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
 	//define texture Parameters and load textures
 	//==================================================================
@@ -236,9 +262,9 @@ int main()
 
 	stbi_image_free(data);	//free image memory
 
-	baseShader.use();
-	baseShader.setInt("texSampler1", 0);	//set texture 1 to GL_TEXTURE0
-	baseShader.setInt("texSampler2", 1);	//set texture 2 to GL_TEXTURE1
+	textureShader.use();
+	textureShader.setInt("texSampler1", 0);	//set texture 1 to GL_TEXTURE0
+	textureShader.setInt("texSampler2", 1);	//set texture 2 to GL_TEXTURE1
 
 	float ratio = 0.0f;
 	//==================================================================
@@ -255,9 +281,9 @@ int main()
 	glm::mat4 projMat;
 	projMat = glm::perspective(glm::radians(45.0f), 1000.0f / 800.0f, 0.1f, 100.0f);	//create projection matrix with perspective
 
-	unsigned int modelMatLoc = glGetUniformLocation(baseShader.ID, "modelMat");	//get location of modelMat uniform
-	unsigned int viewMatLoc = glGetUniformLocation(baseShader.ID, "viewMat");	//get location of viewMat uniform
-	unsigned int projMatLoc = glGetUniformLocation(baseShader.ID, "projMat");	//get location of projMat uniform
+	unsigned int modelMatLoc = glGetUniformLocation(lightingBaseShader.ID, "modelMat");	//get location of modelMat uniform
+	unsigned int viewMatLoc = glGetUniformLocation(lightingBaseShader.ID, "viewMat");	//get location of viewMat uniform
+	unsigned int projMatLoc = glGetUniformLocation(lightingBaseShader.ID, "projMat");	//get location of projMat uniform
 	//==================================================================
 
 	glEnable(GL_DEPTH_TEST);	//enable depth testing
@@ -265,7 +291,7 @@ int main()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);	//capture mouse cursor
 
 
-	cam.setMoveMode(FPS_MODE);
+	cam.setMoveMode(FLY_MODE);
 
 	while (!glfwWindowShouldClose(window))	//renderloop which exits when the window is told to close
 	{
@@ -279,7 +305,7 @@ int main()
 
 		//draw
 
-		baseShader.use();
+		lightingBaseShader.use();
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
@@ -299,7 +325,7 @@ int main()
 			modelMat = glm::mat4(1.0f);
 			modelMat = glm::translate(modelMat, cubePos[i]);
 			modelMat = glm::rotate(modelMat, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
-			baseShader.setMat4("modelMat", modelMat);	//send matrix to uniform
+			lightingBaseShader.setMat4("modelMat", modelMat);	//send matrix to uniform
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
 		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
