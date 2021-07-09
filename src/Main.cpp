@@ -175,34 +175,39 @@ int main()
 	glEnableVertexAttribArray(1);	//enable vertex attribute with position 1
 	//==================================================================
 
-	////create vertex array object for light source
-	////==================================================================
-	//unsigned int lightVAO;
-	//glGenVertexArrays(1, &lightVAO);	//generate vertex array object of size 1
-	//glBindVertexArray(lightVAO);	//bind vertex array
-	//
-	////copy vertices from vertex buffer
-	//glBindBuffer(GL_ARRAY_BUFFER, vertexBuff);	//bind vertex buff
-	//
-	////copy data from elemental buffer
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuff);	//bind elementBuff to the GL_ELEMENT_ARRAY_BUFFER target
-	//
-	////set vertex attribute pointers
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);	//define how to interpret vertex data for location in vertex attribute with position 0
-	//glEnableVertexAttribArray(0);	//enable vertex attribute with position 0
-	//
-	//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));	//define how to interpret vertex data for color in vertex attribute with position 1
-	//glEnableVertexAttribArray(1);	//enable vertex attribute with position 1
-	////==================================================================
+	//create vertex array object for light source
+	//==================================================================
+	unsigned int lightVAO;
+	glGenVertexArrays(1, &lightVAO);	//generate vertex array object of size 1
+	glBindVertexArray(lightVAO);	//bind vertex array
+	
+	//copy vertices from vertex buffer
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuff);	//bind vertex buff
+	
+	//copy data from elemental buffer
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuff);	//bind elementBuff to the GL_ELEMENT_ARRAY_BUFFER target
+	
+	//set vertex attribute pointers
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);	//define how to interpret vertex data for location in vertex attribute with position 0
+	glEnableVertexAttribArray(0);	//enable vertex attribute with position 0
+	
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));	//define how to interpret vertex data for color in vertex attribute with position 1
+	glEnableVertexAttribArray(1);	//enable vertex attribute with position 1
+	//==================================================================
 
 	shader baseShader("Resources/Shaders/baseVertShader.vert", "Resources/Shaders/baseFragShader.frag");	//load shader
-	shader textureShader("Resources/Shaders/textureVertShader.vert", "Resources/Shaders/textureFragShader.frag");	//load shader
-	shader lightingBaseShader("Resources/Shaders/baseLightingVertShader.vert", "Resources/Shaders/baseLightingFragShader.frag");	//load shader
-	shader lightSourceShader("Resources/Shaders/baseVertShader.vert", "Resources/Shaders/lightSourceFragShader.frag");
+	baseShader.use();
 
+	shader textureShader("Resources/Shaders/textureVertShader.vert", "Resources/Shaders/textureFragShader.frag");	//load shader
+	textureShader.use();
+
+	shader lightingBaseShader("Resources/Shaders/baseLightingVertShader.vert", "Resources/Shaders/baseLightingFragShader.frag");	//load shader
 	lightingBaseShader.use();
 	lightingBaseShader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	lightingBaseShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+
+	shader lightSourceShader("Resources/Shaders/baseVertShader.vert", "Resources/Shaders/lightSourceFragShader.frag");
+	lightSourceShader.use();
 
 	//define texture Parameters and load textures
 	//==================================================================
@@ -281,9 +286,13 @@ int main()
 	glm::mat4 projMat;
 	projMat = glm::perspective(glm::radians(45.0f), 1000.0f / 800.0f, 0.1f, 100.0f);	//create projection matrix with perspective
 
-	unsigned int modelMatLoc = glGetUniformLocation(lightingBaseShader.ID, "modelMat");	//get location of modelMat uniform
-	unsigned int viewMatLoc = glGetUniformLocation(lightingBaseShader.ID, "viewMat");	//get location of viewMat uniform
-	unsigned int projMatLoc = glGetUniformLocation(lightingBaseShader.ID, "projMat");	//get location of projMat uniform
+	unsigned int modelMatLocObject = glGetUniformLocation(lightingBaseShader.ID, "modelMat");	//get location of modelMat uniform
+	unsigned int viewMatLocObject= glGetUniformLocation(lightingBaseShader.ID, "viewMat");	//get location of viewMat uniform
+	unsigned int projMatLocObject= glGetUniformLocation(lightingBaseShader.ID, "projMat");	//get location of projMat uniform
+
+	unsigned int modelMatLocSource = glGetUniformLocation(lightSourceShader.ID, "modelMat");	//get location of modelMat uniform
+	unsigned int viewMatLocSource= glGetUniformLocation(lightSourceShader.ID, "viewMat");	//get location of viewMat uniform
+	unsigned int projMatLocSource= glGetUniformLocation(lightSourceShader.ID, "projMat");	//get location of projMat uniform
 	//==================================================================
 
 	glEnable(GL_DEPTH_TEST);	//enable depth testing
@@ -305,7 +314,6 @@ int main()
 
 		//draw
 
-		lightingBaseShader.use();
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
@@ -315,19 +323,27 @@ int main()
 		viewMat = cam.getViewMat();
 		projMat = glm::perspective(glm::radians(cam.fov), 1000.0f / 800.0f, 0.1f, 100.0f);
 
-		glUniformMatrix4fv(viewMatLoc, 1, GL_FALSE, glm::value_ptr(viewMat));	//send matrix to uniform
-		glUniformMatrix4fv(projMatLoc, 1, GL_FALSE, glm::value_ptr(projMat));	//send matrix to uniform
-
-
+		//draw cube
+		lightingBaseShader.use();
+		glUniformMatrix4fv(viewMatLocObject, 1, GL_FALSE, glm::value_ptr(viewMat));	//send matrix to uniform
+		glUniformMatrix4fv(projMatLocObject, 1, GL_FALSE, glm::value_ptr(projMat));	//send matrix to uniform
+		modelMat = glm::mat4(1.0f);
+		modelMat = glm::translate(modelMat, glm::vec3(0.0f, 0.0f, 0.0f));
+		lightingBaseShader.setMat4("modelMat", modelMat);	//send matrix to uniform
 		glBindVertexArray(VAO);
-		for (unsigned int i = 0; i < 10; i++)
-		{
-			modelMat = glm::mat4(1.0f);
-			modelMat = glm::translate(modelMat, cubePos[i]);
-			modelMat = glm::rotate(modelMat, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
-			lightingBaseShader.setMat4("modelMat", modelMat);	//send matrix to uniform
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		//draw lightsource
+		lightSourceShader.use();
+		glUniformMatrix4fv(viewMatLocSource, 1, GL_FALSE, glm::value_ptr(viewMat));	//send matrix to uniform
+		glUniformMatrix4fv(projMatLocSource, 1, GL_FALSE, glm::value_ptr(projMat));	//send matrix to uniform
+		modelMat = glm::mat4(1.0f);
+		modelMat = glm::translate(modelMat, lightPos);
+		modelMat = glm::scale(modelMat, glm::vec3(0.2f, 0.2f, 0.2f));
+		lightSourceShader.setMat4("modelMat", modelMat);	//send matrix to uniform
+		glBindVertexArray(lightVAO);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
 		//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		glfwSwapBuffers(window);	//swap back buffer (buffer thats being drawn on) and front buffer(buffer with image to be displayed)
