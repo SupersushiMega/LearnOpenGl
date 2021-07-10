@@ -210,6 +210,7 @@ int main()
 	lightingBaseShader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
 	lightingBaseShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	lightingBaseShader.setVec3("lightPos", lightPos);
+	lightingBaseShader.setVec3("viewPos", cam.camPos);
 
 	shader lightSourceShader("Resources/Shaders/baseVertShader.vert", "Resources/Shaders/lightSourceFragShader.frag");
 	lightSourceShader.use();
@@ -317,8 +318,6 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	//clear the color buffer with previosly set color
 
 		//draw
-
-
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
 		glActiveTexture(GL_TEXTURE1);
@@ -334,6 +333,7 @@ int main()
 		modelMat = glm::mat4(1.0f);
 		modelMat = glm::translate(modelMat, glm::vec3(0.0f, 0.0f, 0.0f));
 		lightingBaseShader.setMat4("modelMat", modelMat);	//send matrix to uniform
+		lightingBaseShader.setVec3("viewPos", cam.camPos);
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 

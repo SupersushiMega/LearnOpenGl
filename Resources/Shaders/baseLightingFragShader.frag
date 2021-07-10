@@ -8,16 +8,24 @@ out vec4 FragColor;
 uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
+uniform vec3 viewPos;
 
 float ambientStrength = 0.1;
-vec3 ambientLight;
+float specStrength = 0.5;
 
 vec3 norm = normalize(Normal);
-vec3 lightDir;	
-float diff;
-vec3 diffuseLight;
 
+vec3 ambientLight;
+vec3 lightDir;	
+vec3 diffuseLight;
 vec3 endLight;
+vec3 viewDir;
+vec3 reflecDir;
+vec3 specLight;
+
+float diff;
+float spec;
+
 
 void main()
 {
@@ -25,7 +33,13 @@ void main()
 	lightDir = normalize(lightPos - FragPos);
 	diff = max(dot(norm, lightDir), 0.0);	//calculate difference
 	diffuseLight = diff * lightColor;
-	endLight = (ambientLight + diffuseLight) * objectColor;
+
+	viewDir = normalize(viewPos - FragPos);
+	reflecDir = reflect(-lightDir, norm);
+	spec = pow(max(dot(viewDir, reflecDir), 0.0), 32);
+	specLight = specStrength * spec * lightColor;
+
+	endLight = (ambientLight + diffuseLight + specLight) * objectColor;
 
 	FragColor = vec4(endLight, 1.0);
 }

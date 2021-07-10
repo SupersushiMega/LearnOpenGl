@@ -12,7 +12,8 @@ uniform mat4 projMat;
 
 void main()
 {
-	gl_Position = projMat * viewMat * modelMat *  vec4(aPos.x, aPos.y, aPos.z, 1.0);
 	FragPos = vec3(modelMat * vec4(aPos, 1.0));
-	Normal = aNormal;
+	Normal = mat3(transpose(inverse(modelMat))) * aNormal;
+
+	gl_Position = projMat * viewMat * modelMat *  vec4(aPos.x, aPos.y, aPos.z, 1.0);
 }
