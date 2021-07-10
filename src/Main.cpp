@@ -212,6 +212,15 @@ int main()
 	lightingBaseShader.setVec3("lightPos", lightPos);
 	lightingBaseShader.setVec3("viewPos", cam.camPos);
 
+	lightingBaseShader.setVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+	lightingBaseShader.setVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+	lightingBaseShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+	lightingBaseShader.setFloat("material.shininess", 32.0f);
+
+	lightingBaseShader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+	lightingBaseShader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+	lightingBaseShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
 	shader lightSourceShader("Resources/Shaders/baseVertShader.vert", "Resources/Shaders/lightSourceFragShader.frag");
 	lightSourceShader.use();
 
