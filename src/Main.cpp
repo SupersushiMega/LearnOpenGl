@@ -215,9 +215,15 @@ int main()
 	lightingTextureShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 	lightingTextureShader.setFloat("material.shininess", 32.0f);
 
-	lightingTextureShader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+	lightingTextureShader.setVec3("light.ambient", glm::vec3(0.1f, 0.1f, 0.1f));
 	lightingTextureShader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
 	lightingTextureShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
+	lightingTextureShader.setFloat("light.constant", 1.0f);
+	lightingTextureShader.setFloat("light.linear", 1.0f);
+	lightingTextureShader.setFloat("light.quadratic", 1.0f);
+	lightingTextureShader.setFloat("light.inCutoff", glm::cos(glm::radians(12.5f)));
+	lightingTextureShader.setFloat("light.outCutoff", glm::cos(glm::radians(17.5f)));
 
 	shader lightSourceShader("Resources/Shaders/baseVertShader.vert", "Resources/Shaders/lightSourceFragShader.frag");
 	lightSourceShader.use();
@@ -349,10 +355,12 @@ int main()
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, texture2);
 
-	lightingTextureShader.setInt("material.emission", 2);
-	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, texture3);
+	//lightingTextureShader.setInt("material.emission", 2);
+	//glActiveTexture(GL_TEXTURE2);
+	//glBindTexture(GL_TEXTURE_2D, texture3);
 	//==================================================================
+
+	float angle = 0;
 
 	while (!glfwWindowShouldClose(window))	//renderloop which exits when the window is told to close
 	{
@@ -371,14 +379,23 @@ int main()
 
 		//draw cube
 		lightingTextureShader.use();
-		glUniformMatrix4fv(viewMatLocObject, 1, GL_FALSE, glm::value_ptr(viewMat));	//send matrix to uniform
-		glUniformMatrix4fv(projMatLocObject, 1, GL_FALSE, glm::value_ptr(projMat));	//send matrix to uniform
-		modelMat = glm::mat4(1.0f);
-		modelMat = glm::translate(modelMat, glm::vec3(0.0f, 0.0f, 0.0f));
-		lightingTextureShader.setMat4("modelMat", modelMat);	//send matrix to uniform
-		lightingTextureShader.setVec3("viewPos", cam.camPos);
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		for (unsigned int i = 0; i < 10; i++)
+		{
+			angle = 20.0f * i;
+			glUniformMatrix4fv(viewMatLocObject, 1, GL_FALSE, glm::value_ptr(viewMat));	//send matrix to uniform
+			glUniformMatrix4fv(projMatLocObject, 1, GL_FALSE, glm::value_ptr(projMat));	//send matrix to uniform
+			modelMat = glm::mat4(1.0f);
+			modelMat = glm::translate(modelMat, cubePos[i]);
+			modelMat = glm::rotate(modelMat, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			lightingTextureShader.setMat4("modelMat", modelMat);	//send matrix to uniform
+			lightingTextureShader.setVec3("viewPos", cam.camPos);
+			lightingTextureShader.setVec3("light.pos", cam.camPos);
+			lightingTextureShader.setVec3("light.direction", cam.camMoveFront);
+			//lightingTextureShader.setVec3("light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+
+			glBindVertexArray(VAO);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 
 		//draw lightsource
 		lightSourceShader.use();
