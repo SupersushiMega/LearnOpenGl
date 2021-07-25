@@ -174,7 +174,7 @@ int main()
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));	//define how to interpret vertex data for color in vertex attribute with position 1
 	glEnableVertexAttribArray(1);	//enable vertex attribute with position 1
 
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));	//define how to interpret vertex data for color in vertex attribute with position 2
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));	//define how to interpret vertex data for texture coordinates in vertex attribute with position 2
 	glEnableVertexAttribArray(2);	//enable vertex attribute with position 2
 	//==================================================================
 
@@ -205,24 +205,23 @@ int main()
 
 	shader textureShader("Resources/Shaders/textureVertShader.vert", "Resources/Shaders/textureFragShader.frag");	//load shader
 
-	shader lightingBaseShader("Resources/Shaders/baseLightingVertShader.vert", "Resources/Shaders/baseLightingFragShader.frag");	//load shader
-	lightingBaseShader.use();
-	lightingBaseShader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-	lightingBaseShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
-	lightingBaseShader.setVec3("lightPos", lightPos);
-	lightingBaseShader.setVec3("viewPos", cam.camPos);
+	shader lightingTextureShader("Resources/Shaders/textureLightingVertShader.vert", "Resources/Shaders/textureLightingFragShader.frag");	//load shader
+	lightingTextureShader.use();
+	lightingTextureShader.setVec3("lightPos", lightPos);
+	lightingTextureShader.setVec3("viewPos", cam.camPos);
 
-	lightingBaseShader.setVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
-	lightingBaseShader.setVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-	lightingBaseShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
-	lightingBaseShader.setFloat("material.shininess", 32.0f);
+	lightingTextureShader.setVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+	lightingTextureShader.setVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+	lightingTextureShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+	lightingTextureShader.setFloat("material.shininess", 32.0f);
 
-	lightingBaseShader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-	lightingBaseShader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-	lightingBaseShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+	lightingTextureShader.setVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
+	lightingTextureShader.setVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
+	lightingTextureShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
 	shader lightSourceShader("Resources/Shaders/baseVertShader.vert", "Resources/Shaders/lightSourceFragShader.frag");
 	lightSourceShader.use();
+	lightSourceShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 
 	//define texture Parameters and load textures
 	//==================================================================
@@ -249,11 +248,11 @@ int main()
 
 	stbi_set_flip_vertically_on_load(true);	//set image loader to load image flipped on y axis
 
-	unsigned char* data = stbi_load("Resources/Textures/container.jpg", &width, &height, &nrChannels, 0);	//load image
+	unsigned char* data = stbi_load("Resources/Textures/container2.png", &width, &height, &nrChannels, 0);	//load image
 	
 	if (data)	//check if there is data is not NULL
 	{
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);	//generate texture
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);	//generate texture
 		glGenerateMipmap(GL_TEXTURE_2D);	//generate Mipmap
 	}
 	else
@@ -268,7 +267,7 @@ int main()
 	glGenTextures(1, &texture2);	//generate texture object
 	glBindTexture(GL_TEXTURE_2D, texture2);	//bind texture to GL_TEXTURE_2D
 	
-	data = stbi_load("Resources/Textures/awesomeface.png", &width, &height, &nrChannels, 0);	//load image
+	data = stbi_load("Resources/Textures/container2_specular.png", &width, &height, &nrChannels, 0);	//load image
 
 	if (data)	//check if there is data is not NULL
 	{
@@ -281,6 +280,25 @@ int main()
 	}
 
 	stbi_image_free(data);	//free image memory
+	
+	unsigned int texture3;
+
+	glGenTextures(1, &texture3);
+	glBindTexture(GL_TEXTURE_2D, texture3);
+	
+	data = stbi_load("Resources/Textures/matrix.jpg", &width, &height, &nrChannels, 0);
+	
+	if (data)
+	{
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else
+	{
+		std::cout << "ERROR: texture loading failed" << std::endl;
+	}
+	
+	stbi_image_free(data);
 
 	textureShader.use();
 	textureShader.setInt("texSampler1", 0);	//set texture 1 to GL_TEXTURE0
@@ -301,9 +319,9 @@ int main()
 	glm::mat4 projMat;
 	projMat = glm::perspective(glm::radians(45.0f), 1000.0f / 800.0f, 0.1f, 100.0f);	//create projection matrix with perspective
 
-	unsigned int modelMatLocObject = glGetUniformLocation(lightingBaseShader.ID, "modelMat");	//get location of modelMat uniform
-	unsigned int viewMatLocObject= glGetUniformLocation(lightingBaseShader.ID, "viewMat");	//get location of viewMat uniform
-	unsigned int projMatLocObject= glGetUniformLocation(lightingBaseShader.ID, "projMat");	//get location of projMat uniform
+	unsigned int modelMatLocObject = glGetUniformLocation(lightingTextureShader.ID, "modelMat");	//get location of modelMat uniform
+	unsigned int viewMatLocObject= glGetUniformLocation(lightingTextureShader.ID, "viewMat");	//get location of viewMat uniform
+	unsigned int projMatLocObject= glGetUniformLocation(lightingTextureShader.ID, "projMat");	//get location of projMat uniform
 
 	unsigned int modelMatLocSource = glGetUniformLocation(lightSourceShader.ID, "modelMat");	//get location of modelMat uniform
 	unsigned int viewMatLocSource= glGetUniformLocation(lightSourceShader.ID, "viewMat");	//get location of viewMat uniform
@@ -316,9 +334,30 @@ int main()
 
 	cam.setMoveMode(FLY_MODE);
 
+	glm::vec3 lightCol;
+	glm::vec3 diffCol;
+	glm::vec3 ambiCol;
+
+	//assign textures
+	//==================================================================
+	lightingTextureShader.use();
+	lightingTextureShader.setInt("material.diffuse", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture1);
+
+	lightingTextureShader.setInt("material.specular", 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, texture2);
+
+	lightingTextureShader.setInt("material.emission", 2);
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, texture3);
+	//==================================================================
+
 	while (!glfwWindowShouldClose(window))	//renderloop which exits when the window is told to close
 	{
 		proccessInput(window);
+
 
 		//rendering
 		//==================================================================
@@ -327,22 +366,17 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	//clear the color buffer with previosly set color
 
 		//draw
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture1);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, texture2);
-
 		viewMat = cam.getViewMat();
 		projMat = glm::perspective(glm::radians(cam.fov), 1000.0f / 800.0f, 0.1f, 100.0f);
 
 		//draw cube
-		lightingBaseShader.use();
+		lightingTextureShader.use();
 		glUniformMatrix4fv(viewMatLocObject, 1, GL_FALSE, glm::value_ptr(viewMat));	//send matrix to uniform
 		glUniformMatrix4fv(projMatLocObject, 1, GL_FALSE, glm::value_ptr(projMat));	//send matrix to uniform
 		modelMat = glm::mat4(1.0f);
 		modelMat = glm::translate(modelMat, glm::vec3(0.0f, 0.0f, 0.0f));
-		lightingBaseShader.setMat4("modelMat", modelMat);	//send matrix to uniform
-		lightingBaseShader.setVec3("viewPos", cam.camPos);
+		lightingTextureShader.setMat4("modelMat", modelMat);	//send matrix to uniform
+		lightingTextureShader.setVec3("viewPos", cam.camPos);
 		glBindVertexArray(VAO);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
