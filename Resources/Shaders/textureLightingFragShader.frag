@@ -47,75 +47,38 @@ struct SpotLight {
 	float quadratic;
 };
 
+//prototypes
 vec3 dirLightCalc(DirLight light, vec3 normal, vec3 viewDir);
 vec3 pointLightCalc(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 spotLightCalc(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 
+//in
 in vec2 texCoord;
 in vec3 Normal;
 in vec3 FragPos;
 
+//out
 out vec4 FragColor;
 
+//uniforms
+//==============================================
 uniform Material material;
-
 uniform DirLight dirLight;
 uniform PointLight pointLights[POINT_LIGHT_CNT];
 uniform SpotLight spotLight;
 
 uniform vec3 lightPos;
 uniform vec3 viewPos;
+//==============================================
 
-float dist;
-float attenuation;
-
+//vec3
 vec3 norm;
-
 vec3 lightDir;	
 vec3 endLight;
 vec3 viewDir;
-vec3 reflecDir;
-
-//end results
-vec3 ambiLight;
-vec3 diffLight;
-vec3 specLight;
-
-float diff;
-float spec;
-float epsilon;
-float theta;
-float lightIntensity;
-
 
 void main()
 {
-	//dist = length(light.pos - FragPos);
-	//attenuation = 1.0 / (light.constant + light.linear * dist + light.quadratic * (dist * dist));	//calculate light fallof
-	//
-	//ambiLight =  light.ambient * vec3(texture(material.diffuse, texCoord));
-	//
-	//lightDir = normalize(light.pos - FragPos);
-	//theta = dot(lightDir, normalize(-light.direction));
-	//epsilon = light.inCutoff - light.outCutoff;
-	//lightIntensity = clamp((theta - light.outCutoff) / epsilon, 0.0, 1.0);
-	//
-	////lightDir = normalize(-light.direction);
-	//diff = max(dot(norm, lightDir), 0.0);	//calculate difference
-	//diffLight = light.diffuse * diff * vec3(texture(material.diffuse, texCoord));
-	//
-	//viewDir = normalize(viewPos - FragPos);
-	//reflecDir = reflect(-lightDir, norm);
-	//spec = pow(max(dot(viewDir, reflecDir), 0.0), material.shininess);
-	//
-	//specLight =  light.specular * spec * vec3(texture(material.specular, texCoord));
-	//
-	////ambiLight *= attenuation;
-	//diffLight *= lightIntensity;
-	//specLight *= lightIntensity;
-	//
-	//endLight = ambiLight + diffLight + specLight; //+ vec3(texture(material.emission, texCoord));
-
 	norm = normalize(Normal);
 	viewDir = normalize(viewPos - FragPos);
 	
